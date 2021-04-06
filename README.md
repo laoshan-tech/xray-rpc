@@ -1,6 +1,6 @@
 # xray-rpc
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/laoshan-tech/xray-rpc/python-publish?style=flat-square)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/laoshan-tech/xray-rpc/Upload%20Python%20Package?style=flat-square)
 ![GitHub](https://img.shields.io/github/license/laoshan-tech/xray-rpc?style=flat-square)
 ![GitHub repo size](https://img.shields.io/github/repo-size/laoshan-tech/xray-rpc?style=flat-square)
 ![PyPI](https://img.shields.io/pypi/v/xray-rpc?color=blue&style=flat-square)
