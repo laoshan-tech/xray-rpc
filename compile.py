@@ -1,7 +1,10 @@
+import datetime
 import logging
 import os
 import platform
+import re
 import shutil
+import subprocess
 import sys
 import zipfile
 from pathlib import Path
@@ -105,9 +108,7 @@ def _get_latest_xray_release() -> str:
     获取最新的release版本
     :return:
     """
-    req = client.get(
-        f"https://api.github.com/repos/{XRAY_GITHUB_USER}/{XRAY_GITHUB_REPO}/releases/latest"
-    )
+    req = client.get(f"https://api.github.com/repos/{XRAY_GITHUB_USER}/{XRAY_GITHUB_REPO}/releases/latest")
     if req.status_code != 200:
         logger.error(f"获取 xray-core 最新 release 版本失败，状态码 {req.status_code}")
         return ""
@@ -124,9 +125,7 @@ def _download_xray_zip(xray_f: XrayFile) -> bool:
     :return:
     """
     try:
-        req = client.get(
-            f"https://api.github.com/repos/{XRAY_GITHUB_USER}/{XRAY_GITHUB_REPO}/releases/latest"
-        )
+        req = client.get(f"https://api.github.com/repos/{XRAY_GITHUB_USER}/{XRAY_GITHUB_REPO}/releases/latest")
         if req.status_code != 200:
             logger.error(f"获取 xray-core 最新 release 版本失败，状态码 {req.status_code}")
             return False
@@ -203,10 +202,10 @@ def gen_pb2(src: Path, dst: Path):
 
     # 编译
     command = (
-            f"{sys.executable} -m grpc.tools.protoc "
-            f"-I={src.absolute()} "
-            f"--python_out={dst.absolute()} "
-            f"--grpc_python_out={dst.absolute()} " + " ".join(all_files)
+        f"{sys.executable} -m grpc.tools.protoc "
+        f"-I={src.absolute()} "
+        f"--python_out={dst.absolute()} "
+        f"--grpc_python_out={dst.absolute()} " + " ".join(all_files)
     )
     result = os.system(command)
     return result
@@ -225,7 +224,30 @@ def main():
     if src_path.exists():
         gen_pb2(src=src_path, dst=dst_path)
         logger.info(f"成功生成 RPC 至 {dst_path} 路径下")
-        os.system(command=f"poetry version {latest_version.replace('v', '')}")
+        # 由于gRPC生成的代码在Python 3下存在诡异的引用问题，添加相对引用
+        for py in dst_path.rglob("*.py"):
+            with open(py, "r+") as f:
+                code = f.read()
+                f.seek(0)
+                f.write(re.sub(r"from\s+(.*)\s+import (.*)pb2", r"from xray_rpc.\1 import \2pb2", code))
+                f.truncate()
+
+        p = subprocess.run(
+            args=["poetry", "version", "-s"],
+            timeout=2,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+        )
+        current_pypi_version = p.stdout.strip()
+        if str(current_pypi_version).startswith(latest_version.replace("v", "")):
+            logger.info(f"当前 PyPi 版本 {current_pypi_version} 与 xray-core 版本 {latest_version} 相同，附加小版本")
+            new_version = f"{latest_version.replace('v', '')}.{datetime.datetime.now().strftime('%Y%m%d%H%M')}"
+            logger.info(new_version)
+            os.system(command=f"poetry version {new_version}")
+        else:
+            logger.info(f"当前 PyPi 版本 {current_pypi_version} 与 xray-core 版本 {latest_version} 不同，跟进 xray-core 版本")
+            os.system(command=f"poetry version {latest_version.replace('v', '')}")
     else:
         logger.error(f"{src_path} 不存在")
 
