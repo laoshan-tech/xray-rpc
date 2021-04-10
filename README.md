@@ -8,3 +8,15 @@
 [![Telegram](https://img.shields.io/badge/chat-telegram-26A5E4?style=flat-square&logo=telegram)](https://t.me/laoshan_tech_discuss)
 
 通过 Xray 源码 proto 文件自动生成的 gRPC 代码，版本号对应 Xray 相对应。
+
+## 安装
+
+通过 pip 安装。
+
+```shell
+pip install xray-rpc
+```
+
+## 使用
+
+参考 [xray-node](https://github.com/laoshan-tech/xray-node/blob/master/xray_node/core/xray.py) 中的用法。
