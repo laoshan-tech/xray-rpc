@@ -14,16 +14,16 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-grpcio = "^1.36.1"
-grpcio-tools = "^1.36.1"
+grpcio = "^1.37.0"
+grpcio-tools = "^1.37.0"
 httpx = "^0.17.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
 
 [[tool.poetry.source]]
-name = "douban"
-url = "https://pypi.doubanio.com/simple"
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 default = true
 
 [build-system]
