@@ -228,8 +228,10 @@ def main():
         for py in dst_path.rglob("*.py"):
             with open(py, "r+") as f:
                 code = f.read()
+                code = re.sub(r"from\s+(.*)\s+import (.*)pb2", r"from xray_rpc.\1 import \2pb2", code)
+                code = re.sub(r"importlib\.import_module\(\'(.*)\'\)", r"importlib.import_module('xray_rpc.\1')", code)
                 f.seek(0)
-                f.write(re.sub(r"from\s+(.*)\s+import (.*)pb2", r"from xray_rpc.\1 import \2pb2", code))
+                f.write(code)
                 f.truncate()
 
         p = subprocess.run(
