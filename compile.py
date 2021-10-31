@@ -4,12 +4,12 @@ import os
 import platform
 import re
 import shutil
-import subprocess
 import sys
 import zipfile
 from pathlib import Path
 
 import httpx
+from packaging.version import parse
 
 XRAY_GITHUB_USER = "XTLS"
 XRAY_GITHUB_REPO = "Xray-core"
@@ -211,6 +211,29 @@ def gen_pb2(src: Path, dst: Path):
     return result
 
 
+def _get_current_pypi_release() -> str:
+    """
+    从PYPI获取当前最新版本
+    :return:
+    """
+    try:
+        req = client.get(url=f"https://pypi.python.org/pypi/xray-rpc/json")
+
+        if req.status_code == 200:
+            result = req.json()
+            releases = result.get("releases", [])
+
+            vers = [parse(r) for r in releases if not parse(r).is_prerelease]
+            version = max(vers)
+
+            return str(version)
+        else:
+            return ""
+    except Exception as e:
+        logger.error(f"获取 xray-rpc 最新版本失败 {e}")
+        return ""
+
+
 def main():
     path = Path(__file__).parent / "xray_download"
     install_xray(install_path=path, use_cdn=True)
@@ -234,14 +257,7 @@ def main():
                 f.write(code)
                 f.truncate()
 
-        p = subprocess.run(
-            args=["poetry", "version", "-s"],
-            timeout=2,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            encoding="utf-8",
-        )
-        current_pypi_version = p.stdout.strip()
+        current_pypi_version = _get_current_pypi_release()
         if str(current_pypi_version).startswith(latest_version.replace("v", "")):
             logger.info(f"当前 PyPi 版本 {current_pypi_version} 与 xray-core 版本 {latest_version} 相同，附加小版本")
             new_version = f"{latest_version.replace('v', '')}.{datetime.datetime.now().strftime('%Y%m%d%H%M')}"
