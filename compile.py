@@ -236,7 +236,7 @@ def _get_current_pypi_release() -> str:
 
 def main():
     path = Path(__file__).parent / "xray_download"
-    install_xray(install_path=path, use_cdn=True)
+    install_xray(install_path=path, use_cdn=False)
 
     latest_version = _get_latest_xray_release()
     logger.info(f"xray-core 最新版本为 {latest_version}")
